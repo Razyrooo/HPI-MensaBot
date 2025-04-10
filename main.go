@@ -15,7 +15,7 @@ func main() {
 	//loading environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	var t time.Time = time.Now()
