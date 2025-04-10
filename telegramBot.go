@@ -25,7 +25,11 @@ func sendTelegramMessage(message string, chatID string, botToken string) error {
 		return fmt.Errorf("failed to make POST request: %w", err)
 	}
 	//ensure the response body is closed
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println("failed to clode response body: %w", err)
+		}
+	}()
 
 	//checks for errors if the response fails
 	if resp.StatusCode != http.StatusOK {

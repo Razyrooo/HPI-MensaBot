@@ -37,7 +37,7 @@ type Mensa_API_Response struct {
 func getMeals(t time.Time) ([10]string, [10]float32) {
 	//creates the mensa-api URL and makes a http request to it
 	//var t time.Time = time.Now()
-	var mensa_api_url string = fmt.Sprintf("https://stwwb.webspeiseplan.de/index.php?token=55ed21609e26bbf68ba2b19390bf7961&model=menu&location=9601&languagetype=1&_=%s", strconv.FormatInt(t.Unix(), 10))
+	mensa_api_url := fmt.Sprintf("https://stwwb.webspeiseplan.de/index.php?token=55ed21609e26bbf68ba2b19390bf7961&model=menu&location=9601&languagetype=1&_=%s", strconv.FormatInt(t.Unix(), 10))
 
 	req, err := http.NewRequest("GET", mensa_api_url, nil)
 	if err != nil {
@@ -56,7 +56,11 @@ func getMeals(t time.Time) ([10]string, [10]float32) {
 		log.Fatal(err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println("failed to clode response body: %w", err)
+		}
+	}()
 
 	//reads out the response body into an array
 	body, err := io.ReadAll(resp.Body)
@@ -64,14 +68,23 @@ func getMeals(t time.Time) ([10]string, [10]float32) {
 		log.Fatal(err)
 	}
 
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println("failed to clode response body: %w", err)
+		}
+	}()
+
 	//unmarshalls the array into readable json
 	var response Mensa_API_Response
-	json.Unmarshal(body, &response)
+	err_j := json.Unmarshal(body, &response)
+	if err_j != nil {
+		log.Fatal(err)
+	}
 
 	var meals [10]string
 	var prices [10]float32
 	{
-		var i int = 0
+		i := 0
 		for _, meal := range response.Content[0].SpeiseplanGerichtData {
 			if meal.SpeiseplanAdvancedGericht.Datum.Day() != t.Day() {
 				continue

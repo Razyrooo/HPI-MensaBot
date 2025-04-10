@@ -18,9 +18,9 @@ func main() {
 	}
 
 	//get meals from mensa api
-	var t time.Time = time.Now()
+	t := time.Now()
 	meals, prices := getMeals(t)
-	var message string = fmt.Sprintf("<b>%s's menue</b>\n\n", t.Weekday())
+	message := fmt.Sprintf("<b>%s's menue</b>\n\n", t.Weekday())
 	for i, meal := range meals {
 		if prices[i] == 0.0 {
 			break
@@ -29,11 +29,14 @@ func main() {
 	}
 
 	//load credentials from environmental variables
-	var chatID string = os.Getenv("CHATID")
-	var botToken string = os.Getenv("BOT_TOKEN")
+	chatID := os.Getenv("CHATID")
+	botToken := os.Getenv("BOT_TOKEN")
 	if chatID == "" || botToken == "" {
 		log.Fatal("ChatID or Bottoken missing")
 	}
 
-	sendTelegramMessage(message, chatID, botToken)
+	err_t := sendTelegramMessage(message, chatID, botToken)
+	if err_t != nil {
+		log.Fatal("failed to send Telegram Message", err_t)
+	}
 }
