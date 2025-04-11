@@ -10,6 +10,12 @@ import (
 )
 
 func main() {
+	_time := time.Now()
+	if (_time.Weekday()) == time.Saturday || _time.Weekday() == time.Sunday {
+		fmt.Println("Nothing to do at the weekend.")
+		return
+	}
+
 	//load environment variables from
 	//only necessary if a .env file is used
 	err := godotenv.Load()
@@ -18,9 +24,8 @@ func main() {
 	}
 
 	//get meals from mensa api
-	t := time.Now()
-	meals, prices := getMeals(t)
-	message := fmt.Sprintf("<b>%s's menue</b>\n\n", t.Weekday())
+	meals, prices := getMeals(_time)
+	message := fmt.Sprintf("<b>%s's menue</b>\n\n", _time.Weekday())
 	for i, meal := range meals {
 		if prices[i] == 0.0 {
 			break
