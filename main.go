@@ -25,6 +25,8 @@ func main() {
 
 	//get meals from mensa api
 	meals, prices := getMeals(_time)
+
+	// create the telegram message
 	message := fmt.Sprintf("<b>%s's menue</b>\n\n", _time.Weekday())
 	for i, meal := range meals {
 		if prices[i] == 0.0 {
