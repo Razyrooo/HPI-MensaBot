@@ -34,6 +34,24 @@ type Mensa_API_Response struct {
 	} `json:"content"`
 }
 
+// find the correct content element containing the meals of the current day
+func findContent(t time.Time, response Mensa_API_Response) int {
+	for i, content := range response.Content {
+		mealCounter := 0
+		for _, meal := range content.SpeiseplanGerichtData {
+			if meal.SpeiseplanAdvancedGericht.Datum.Day() == t.Day() {
+				mealCounter++
+			}
+		}
+		if mealCounter >= 5 {
+			return i
+		}
+	}
+	log.Panic("No content found.")
+	return -1
+}
+
+// get mealdata from the mensa-website-api und return sorted meals and prices
 func getMeals(t time.Time) ([10]string, [10]float32) {
 	//creates the mensa-api URL and makes a http request to it
 	//var t time.Time = time.Now()
@@ -81,18 +99,30 @@ func getMeals(t time.Time) ([10]string, [10]float32) {
 		log.Fatal(err)
 	}
 
+	// searches response data for the meals and prices of the day
+	/*
+		the content from the json response always begins with the relevo-schale(id 112) and ends with either heiße Theke (id 294) or nachtisch (119/120)
+	*/
 	var meals [10]string
 	var prices [10]float32
 	{
 		i := 0
-		for _, meal := range response.Content[0].SpeiseplanGerichtData {
+		for _, meal := range response.Content[findContent(t, response)].SpeiseplanGerichtData {
+
+			// meal filter
 			if meal.SpeiseplanAdvancedGericht.Datum.Day() != t.Day() {
 				continue
 
-			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 112 {
+			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 112 { // Relevo-Schale
 				continue
 
-			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 294 {
+			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 294 { // Heiße Theke
+				break
+
+			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 119 { // Nachtisch
+				break
+
+			} else if meal.SpeiseplanAdvancedGericht.GerichtkategorieID == 120 { //Nachtisch
 				break
 
 			} else {
@@ -102,6 +132,7 @@ func getMeals(t time.Time) ([10]string, [10]float32) {
 			}
 
 		}
+
 	}
 	return meals, prices
 }
